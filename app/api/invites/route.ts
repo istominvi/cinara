@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { supabaseRoute } from "@/lib/supabase/route";
+import { requireRouteRole } from "@/lib/auth/route";
 
 function generateToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(10));
@@ -8,23 +8,10 @@ function generateToken() {
 }
 
 export async function POST(request: Request) {
-  const supabase = supabaseRoute() as any;
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const auth = await requireRouteRole("teacher");
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", session.user.id)
-    .single();
-
-  if (!profile || profile.role !== "teacher") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!auth.ok) {
+    return auth.response;
   }
 
   const body = await request.json();
@@ -42,12 +29,12 @@ export async function POST(request: Request) {
 
   const token = generateToken();
 
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("invites")
     .insert({
       token,
       invite_type: inviteType,
-      teacher_id: session.user.id,
+      teacher_id: auth.user.id,
       workspace_id: workspaceId ?? null,
       student_email: studentEmail ?? null,
       student_phone: studentPhone ?? null,
