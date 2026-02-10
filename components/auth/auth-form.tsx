@@ -16,7 +16,7 @@ type AuthFormProps = {
 
 export function AuthForm({ role }: AuthFormProps) {
   const router = useRouter();
-  const supabase = React.useMemo(() => supabaseBrowser(), []);
+  const supabase = React.useMemo(() => supabaseBrowser() as any, []);
   const [mode, setMode] = React.useState<"login" | "register">("login");
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);

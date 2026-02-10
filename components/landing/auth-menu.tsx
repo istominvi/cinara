@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 import { AuthDialog } from "@/components/auth/auth-dialog";
@@ -59,11 +60,13 @@ export function AuthMenu() {
         </DropdownMenu.Content>
       </DropdownMenu.Root>
 
-      <AuthDialog
-        defaultRole={role}
-        open={open}
-        onOpenChange={setOpen}
-      />
+      <Suspense fallback={null}>
+        <AuthDialog
+          defaultRole={role}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      </Suspense>
     </div>
   );
 }

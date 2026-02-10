@@ -2,8 +2,12 @@ import { redirect } from "next/navigation";
 
 import { supabaseServer } from "@/lib/supabase/server";
 
+type AdminProfile = {
+  role: "teacher" | "student" | "admin";
+};
+
 export default async function AdminPage() {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -12,11 +16,13 @@ export default async function AdminPage() {
     redirect("/auth");
   }
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", session.user.id)
     .single();
+
+  const profile = profileData as AdminProfile | null;
 
   if (!profile || profile.role !== "admin") {
     redirect("/auth");

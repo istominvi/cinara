@@ -7,7 +7,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { token: string } },
 ) {
-  const supabase = supabaseAdmin();
+  const supabase = supabaseAdmin() as any;
 
   const { data, error } = await supabase
     .from("invites")
@@ -26,7 +26,7 @@ export async function POST(
   _request: Request,
   { params }: { params: { token: string } },
 ) {
-  const authSupabase = supabaseRoute();
+  const authSupabase = supabaseRoute() as any;
   const {
     data: { session },
   } = await authSupabase.auth.getSession();
@@ -35,12 +35,23 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const admin = supabaseAdmin();
-  const { data: invite, error } = await admin
+  const admin = supabaseAdmin() as any;
+  const { data: inviteData, error } = await admin
     .from("invites")
     .select("id, invite_type, teacher_id, workspace_id, expires_at, accepted_at")
     .eq("token", params.token)
     .single();
+
+  const invite = inviteData as
+    | {
+        id: string;
+        invite_type: "student" | "workspace_teacher" | "teacher";
+        teacher_id: string | null;
+        workspace_id: string | null;
+        expires_at: string | null;
+        accepted_at: string | null;
+      }
+    | null;
 
   if (error || !invite) {
     return NextResponse.json({ error: "Invite not found" }, { status: 404 });
@@ -54,11 +65,13 @@ export async function POST(
     return NextResponse.json({ error: "Invite expired" }, { status: 400 });
   }
 
-  const { data: profile } = await authSupabase
+  const { data: profileData } = await authSupabase
     .from("profiles")
     .select("role")
     .eq("id", session.user.id)
     .single();
+
+  const profile = profileData as { role: "teacher" | "student" | "admin" } | null;
 
   if (!profile) {
     return NextResponse.json({ error: "Profile missing" }, { status: 400 });
