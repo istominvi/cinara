@@ -8,7 +8,7 @@ export default async function TeacherLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = supabaseServer();
+  const supabase = supabaseServer() as any;
   const {
     data: { session },
   } = await supabase.auth.getSession();
